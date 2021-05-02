@@ -6,6 +6,7 @@
 ///// Pushing the Analog Stick Button enables the "Display Page Swipe" mode /////
 ///// The Analog Stick can then be moved/swiped left or right to change the Display Pages /////
 ///// A certian threshold is applied to the Analog Stick's swiping motion /////
+///// Also implemeted the i2c Transmission in a Function to reduce repetative code /////
 ///// Overall code has also been simplified and more comments have been added /////
 
 ///// GitHub: @Hizbi-K /////
