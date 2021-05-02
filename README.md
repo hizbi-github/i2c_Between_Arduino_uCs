@@ -152,7 +152,7 @@ The functions implemented in the Master Arduino can summarized as:
 
 8.      void i2c_Tx_Arduinos (int Address, int DataToBeSent, int DataSizeinBytes);
 
-    Yet to be implemented. This function will simplify the i2c Transmission process and the overall code length. An i2c Transmission is done by first selecting the slave address, then sending it the registor Byte to tell the Slave what to send. This is done because the slave is unable to send anything by itself, only when the master request some data, the slave can then send it. Next, the data is actually requested from the slave using its i2c Address and the number of Bytes the master expects to receive. Instead of doing this everytime, this function will be called which will perform the i2c Transmission
+    This function simplifies the i2c Transmission process and the overall code length. An i2c Transmission is done by first selecting the slave address, then sending it the registor Byte to tell the Slave what to send. This is done because the slave is unable to send anything by itself, only when the master request some data, the slave can then send it. Next, the data is actually requested from the slave using its i2c Address and the number of Bytes the master expects to receive. Instead of doing this everytime, this function is called which will perform the i2c Transmission
 
 <p align="center">
   <img src="Demonstration_Images_and_Gifs\Moving_Text_Graphic_Using_Analog_Stick.gif" />
@@ -164,25 +164,42 @@ The functions implemented in the Master Arduino can summarized as:
 
 9.      void analogStickReception ();
 
-    This fucntion requests the RAW Analog Stick readings from the slave Arduino. The data is then received in Bytes and combined together. After that, it is mapped to the display resolution of the OLED Screen. This mapped data is shown on the page # 5 of the OLED display. This also allows the Text Graphic to move across the screen without any clipping using the Analog Stick on the slave Arduino.
+    This fucntion requests the RAW Analog Stick readings from the slave Arduino. Analog Stick's Button status is also requested here from the Slave. The data is then received in a buffer of 5 Bytes; one for Button status and two Bytes for each axis. The two Bytes for the axis are then commbined together. After that, it is mapped to the display resolution of the OLED Screen. This mapped data is shown on the page # 5 of the OLED display. This data is also used for the Text Graphic to move it across the screen without any clipping using the Analog Stick on the slave Arduino.
 
-10.     long rangeMapper (double value, double fromMin, double fromMax, double toMin, double toMax);
+<p align="center">
+  <img src="Demonstration_Images_and_Gifs\Display_Swiping_using_Analog_Stick.gif" />
+</p>
+
+<p align="center">
+  Swiping the Display Pages the Analog Stick
+</p>    
+
+10.     void analogStickSwipe ();
+
+    When enabled by pressing the Analog Stick's Button, this functions reads the Analog Stick's motion to swipe the display pages/menus. This is all done through the i2c Bus from Slave to Master.
+
+11.     long rangeMapper (double value, double fromMin, double fromMax, double toMin, double toMax);
 
     A function for mapping two different ranges of data together based on the minimum and maximum values of both ranges. The current value in the range from which mapping is performed is also required. Here this function is used for mapping the RAW Analog Stick data from the slave Arduino to the display resolution of OLED display. 
 
 ## Slave_Code
 
-The slave code is far too simple, considering the master Arduino is doing all the heavy-lifting. There are only three functions here:
+The slave code is far too simple, considering the master Arduino is doing all the heavy-lifting. There are only four functions here:
 
-1.      void analogStickReader ();
+1.      void pressAnalogStick_Btn ();
+
+    The Analog Button's status is read here in this function and a Byte flag is set. This flag is then sent to the Master which then enables the Analog Stick swiping motion 
+    or turns it off.
+
+2.      void analogStickReader ();
 
     This function simply simply reads the Analog Stick data for both X and Y-Axis and stores them in a struct. The offsets, which were calculated manually, are also applied to get accurate data.
 
-2.      void slaveRead(int);
+3.      void slaveRead(int);
 
     This function is used when the master Arduino sends data on the i2c Bus. This triggers the ISR for the slave Arduino, where this function is called. Since this happens inside the ISR, this function must be short so that the duration of the ISR is short as possible. The data is sent in Bytes from the master. Therefore, if there are more than one Bytes of data, it has to be stored inside a buffer and then later combined if required. The single "int" parameter is passed from the i2c ISR and it tells the slave how many Bytes are expected to be received from the master Arduino.
 
-3.      void slaveWrite();
+4.      void slaveWrite();
 
     This function is used to send the data to the master Arduino when requested. For a single Byte, the "Wire.write()" is called once and the data is passed to it. For sending multiple Bytes, a buffer is required. The buffer is filled Byte-by-Byte and then the buffer and its size in Bytes is passed to the "Wire.write()" function. The master Arduino specifies the number of Bytes the master will receive. Even if the slave tries to send more, the master Arduino will ignore them.
 
@@ -212,9 +229,9 @@ This results in: 10101010 01010101
 Which is actually the 16-Bit reading taken by the MPU, but due to i2c limitations, it is split up in 2-Bytes to be sent seperately.
 
 
-# Next Version
+# Last Version
 
-The code has been commented properly to expain each function and block of code, but the code can still be simplified further by turning the repetative lines of code into seperate functions. So far, there are no bugs in the code and the hardware responds within the expectations. The next version will introduce more functions to replace some repetative code and make use of the Button in Analog Stick. A new display-page selection menu will also be implemented.
+The code has been commented properly to expain each function and block of code, but the code can still be simplified further by turning the repetative lines of code into seperate functions. So far, there are no bugs in the code and the hardware responds within the expectations. The last version introduced more functions to replace some repetative code and made use of the Button in Analog Stick to swipe the Display Pages. There will be no further revisions.
 
 
 
